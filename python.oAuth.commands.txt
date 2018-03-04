@@ -1,0 +1,233 @@
+import http.client
+import requests
+import json
+import datetime
+from six.moves.urllib import request
+from cryptography.x509 import load_pem_x509_certificate
+
+from cryptography.hazmat.backends import default_backend
+
+
+--get public key and decode JWT token --
+AUTH0_DOMAIN = 'jtsk.auth0.com'
+jsonurl = request.urlopen('https://' + AUTH0_DOMAIN + '/.well-known/jwks.json')
+jwks = json.loads(jsonurl.read())
+cert = '-----BEGIN CERTIFICATE-----\n' + jwks['keys'][0]['x5c'][0] + '\n-----END CERTIFICATE-----'
+certificate = load_pem_x509_certificate(cert.encode('utf-8'), default_backend())
+PUBLIC_KEY = certificate.public_key()
+access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1UQTNRekkwUkVVM01rTTNORE13T0RkR01ESTROa05DTkRjek56TTRRMEUxUmpGQ1JqZ3lRZyJ9.eyJpc3MiOiJodHRwczovL2p0c2suYXV0aDAuY29tLyIsInN1YiI6IkY3Y2VJaktuR3FoZzc1VnBHdFhjSGlvaHVLT0VndkRhQGNsaWVudHMiLCJhdWQiOiJodHRwczovL215ZHJmYXBpLmNvbSIsImlhdCI6MTUyMDE0ODAwMywiZXhwIjoxNTIwMjM0NDAzLCJhenAiOiJGN2NlSWpLbkdxaGc3NVZwR3RYY0hpb2h1S09FZ3ZEYSIsInNjb3BlIjoiZGVsZXRlOm1lc3NhZ2VzIHJlYWQ6bWVzc2FnZXMiLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.FUqSYovS3R1BY4qR_YW8b0t6sj4Er0zS9F2F09RrJrHCULS2yNFLI3fFXq8jW_9rM_XyaDHg0TZaS1L9Xh5ZqKbAJZsv4xGEkUZefr5L--bYFsIh-A_Q1-dwVAvMnd3E8qxC5oJOIgCSeaLxsV8IBsA7VLa-bugA4xmtez889cVf8u80mbRCsCJdiYbgp8gLlHt0kQ8hjnMXgIDXN8EZTlGYg1wRruGPtoLiRCYUqgpOwRcWXOAuYaZk34Zi26r57yyG2OcvMkDuJr6KefEEpkSK8M-ktwMPSpe7Bqa2TEXc0_k_zZOsUyRRC9L3zPXopDeWcMUksk9YTSqU65nw7g'
+jwt_decoded = jwt.decode(access_token,PUBLIC_KEY,audience='https://mydrfapi.com',algorithms=['RS256'])
+{'iss': 'https://jtsk.auth0.com/', 
+'sub': 'F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa@clients', 
+'aud': 'https://mydrfapi.com', 
+'iat': 1520148003, 
+'exp': 1520234403, 
+'azp': 'F7ceIjKnGqhg75VpG
+tXcHiohuKOEgvDa', 
+'scope': 'delete:messages read:messages', 
+'gty': 'client-credentials'}
+
+
+issued_on = (datetime.datetime.now() + datetime.timedelta(microseconds = jwt_decoded['iat']/10)).strftime("%Y-%m-%d %H:%M:%S")
+issued_on
+expired_on = (datetime.datetime.now() + datetime.timedelta(microseconds = jwt_decoded['exp']/10)).strftime("%Y-%m-%d %H:%M:%S")
+expired_on
+
+conn = http.client.HTTPSConnection("jtsk.auth0.com")
+payload = "{\"client_id\":\"F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa\",\"client_secret\":\"encK_0ctr599uATK1id1mmTv73PEDKvuMp0DUHllwDYWvJM3r74wVEDAH5lZFhJI\",\"audience\":\"https://mydrfapi.com\",\"grant_type\":\"client_credentials\"}"
+headers = { 'content-type': "application/json" }
+conn.request("POST", "/oauth/token", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+resp = json.loads(data.decode("utf-8"))
+access_token = resp['access_token']
+
+
+conn = http.client.HTTPSConnection("jtsk.auth0.com")
+payload = "{\"client_id\":\"F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa\",\"client_secret\":\"encK_0ctr599uATK1id1mmTv73PEDKvuMp0DUHllwDYWvJM3r74wVEDAH5lZFhJI\",\"audience\":\"https://mydrfapi.com\"}"
+headers = { 'content-type': "application/json" }
+conn.request("POST", "/oauth/token", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+resp = json.loads(data.decode("utf-8"))
+access_token = resp['access_token']
+
+--test--
+conn = http.client.HTTPSConnection("jtsk.auth0.com")
+payload = "{\"client_id\":\"F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa\",\"audience\":\"https://mydrfapi.com\",\"grant_type\":\"client_credentials\"}"
+headers = { 'content-type': "application/json" }
+conn.request("POST", "/oauth/token", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+resp = json.loads(data.decode("utf-8"))
+access_token = resp['access_token']
+
+access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1UQTNRekkwUkVVM01rTTNORE13T0RkR01ESTROa05DTkRjek56TTRRMEUxUmpGQ1JqZ3lRZyJ9.eyJpc3MiOiJodHRwczovL2p0c2suYXV0aDAuY29tLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEyMDA4Nzc1MjIxMTA5NDg4MDg5IiwiYXVkIjoiaHR0cHM6Ly9teWRyZmFwaS5jb20iLCJpYXQiOjE1MjAwODc4MzEsImV4cCI6MTUyMDA5NTAzMSwiYXpwIjoiRjdjZUlqS25HcWhnNzVWcEd0WGNIaW9odUtPRWd2RGEiLCJzY29wZSI6InJlYWQ6bWVzc2FnZXMifQ.FSmjFs7Q6F2UglaZ7tsFCM3BD-_r9YSKpkri82kAlUg8IUmPaaA7bk5Qae4JiTQhSHbOq1EEuuGNZ3A5uDrr0MzPN9CeChktAH8fO0ECrGdeRFuwizr4ypxA-zRRS4otKddxdqrH1cDXVe3vhf4lvuEuNHVdAEBjupM0GiZKhjk136AjbjGMZH4vz8gcHob69ejgNzyAA4TDmv2YGK8d81Shsd6HeGlREVtLRvTvMG6mQIbzDFiqBCZqXJHFsGrSSgIctRqV6Bh4NdkL6dI8b4QO0eVuDvmARl1FgYvfEP9mOzTRhjj9xRePsFVgZY6arPRELZ36cdpLQh6N90Heyg"
+
+conn = http.client.HTTPConnection("localhost:8000")
+headers = { 'authorization': "Bearer {}".format(access_token) }
+conn.request("GET", "/api/private", headers=headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+conn = http.client.HTTPConnection("localhost:8000")
+headers = { 'authorization': "Bearer {}".format(access_token) }
+conn.request("GET", "/api/private-scoped", headers=headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+---- write ----
+conn = http.client.HTTPSConnection("jtsk.auth0.com")
+payload = "{\"client_id\":\"F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa\",\"client_secret\":\"encK_0ctr599uATK1id1mmTv73PEDKvuMp0DUHllwDYWvJM3r74wVEDAH5lZFhJI\",\"audience\":\"https://mydrfapi.com\",\"grant_type\":\"client_credentials\"}"
+headers = { 'content-type': "application/json" }
+conn.request("POST", "/oauth/token", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+resp = json.loads(data.decode("utf-8"))
+access_token = resp['access_token']
+
+
+access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1UQTNRekkwUkVVM01rTTNORE13T0RkR01ESTROa05DTkRjek56TTRRMEUxUmpGQ1JqZ3lRZyJ9.eykpc3MiOiJodHRwczovL2p0c2suYXV0aDAuY29tLyIsInN1YiI6Imdvb2dsZS1vYXV0aDJ8MTEyMDA4Nzc1MjIxMTA5NDg4MDg5IiwiYXVkIjoiaHR0cHM6Ly9teWRyZmFwaS5jb20iLCJpYXQiOjE1MjAwODc4MzEsImV4cCI6MTUyMDA5NTAzMSwiYXpwIjoiRjdjZUlqS25HcWhnNzVWcEd0WGNIaW9odUtPRWd2RGEiLCJzY29wZSI6InJlYWQ6bWVzc2FnZXMifQ.FSmjFs7Q6F2UglaZ7tsFCM3BD-_r9YSKpkri82kAlUg8IUmPaaA7bk5Qae4JiTQhSHbOq1EEuuGNZ3A5uDrr0MzPN9CeChktAH8fO0ECrGdeRFuwizr4ypxA-zRRS4otKddxdqrH1cDXVe3vhf4lvuEuNHVdAEBjupM0GiZKhjk136AjbjGMZH4vz8gcHob69ejgNzyAA4TDmv2YGK8d81Shsd6HeGlREVtLRvTvMG6mQIbzDFiqBCZqXJHFsGrSSgIctRqV6Bh4NdkL6dI8b4QO0eVuDvmARl1FgYvfEP9mOzTRhjj9xRePsFVgZY6arPRELZ36cdpLQh6N90Heyg"
+
+conn = http.client.HTTPConnection("localhost:8000")
+headers = { 'authorization': "Bearer {}".format(access_token) }
+conn.request("GET", "/api/private-scoped-write",  headers=headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+
+
+
+for info in getattr(cert, attr):
+        print("{}: {}".format(info._oid._name, info._value))
+
+
+import http.client
+conn = http.client.HTTPConnection("localhost:8000")
+conn.request("GET", "/api/private")
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+
+conn = http.client.HTTPConnection("localhost:8000")
+conn.request("GET", "/api/public")
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+--list--
+import http.client
+import requests
+import json
+from six.moves.urllib import request
+from cryptography.x509 import load_pem_x509_certificate
+
+from cryptography.hazmat.backends import default_backend
+
+access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1UQTNRekkwUkVVM01rTTNORE13T0RkR01ESTROa05DTkRjek56TTRRMEUxUmpGQ1JqZ3lRZyJ9.eyJpc3MiOiJodHRwczovL2p0c2suYXV0aDAuY29tLyIsInN1YiI6IkY3Y2VJaktuR3FoZzc1VnBHdFhjSGlvaHVLT0VndkRhQGNsaWVudHMiLCJhdWQiOiJodHRwczovL215ZHJmYXBpLmNvbSIsImlhdCI6MTUyMDE0ODAwMywiZXhwIjoxNTIwMjM0NDAzLCJhenAiOiJGN2NlSWpLbkdxaGc3NVZwR3RYY0hpb2h1S09FZ3ZEYSIsInNjb3BlIjoiZGVsZXRlOm1lc3NhZ2VzIHJlYWQ6bWVzc2FnZXMiLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.FUqSYovS3R1BY4qR_YW8b0t6sj4Er0zS9F2F09RrJrHCULS2yNFLI3fFXq8jW_9rM_XyaDHg0TZaS1L9Xh5ZqKbAJZsv4xGEkUZefr5L--bYFsIh-A_Q1-dwVAvMnd3E8qxC5oJOIgCSeaLxsV8IBsA7VLa-bugA4xmtez889cVf8u80mbRCsCJdiYbgp8gLlHt0kQ8hjnMXgIDXN8EZTlGYg1wRruGPtoLiRCYUqgpOwRcWXOAuYaZk34Zi26r57yyG2OcvMkDuJr6KefEEpkSK8M-ktwMPSpe7Bqa2TEXc0_k_zZOsUyRRC9L3zPXopDeWcMUksk9YTSqU65nw7g'
+headers = { 'authorization': "Bearer {}".format(access_token) }
+conn = http.client.HTTPConnection("localhost:8000")
+conn.request("GET", "/api/list-country", headers=headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+--verify jwt token--
+access_token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1UQTNRekkwUkVVM01rTTNORE13T0RkR01ESTROa05DTkRjek56TTRRMEUxUmpGQ1JqZ3lRZyJ9.eyJpc3MiOiJodHRwczovL2p0c2suYXV0aDAuY29tLyIsInN1YiI6IkY3Y2VJaktuR3FoZzc1VnBHdFhjSGlvaHVLT0VndkRhQGNsaWVudHMiLCJhdWQiOiJodHRwczovL215ZHJmYXBpLmNvbSIsImlhdCI6MTUyMDE0ODAwMywiZXhwIjoxNTIwMjM0NDAzLCJhenAiOiJGN2NlSWpLbkdxaGc3NVZwR3RYY0hpb2h1S09FZ3ZEYSIsInNjb3BlIjoiZGVsZXRlOm1lc3NhZ2VzIHJlYWQ6bWVzc2FnZXMiLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.FUqSYovS3R1BY4qR_YW8b0t6sj4Er0zS9F2F09RrJrHCULS2yNFLI3fFXq8jW_9rM_XyaDHg0TZaS1L9Xh5ZqKbAJZsv4xGEkUZefr5L--bYFsIh-A_Q1-dwVAvMnd3E8qxC5oJOIgCSeaLxsV8IBsA7VLa-bugA4xmtez889cVf8u80mbRCsCJdiYbgp8gLlHt0kQ8hjnMXgIDXN8EZTlGYg1wRruGPtoLiRCYUqgpOwRcWXOAuYaZk34Zi26r57yyG2OcvMkDuJr6KefEEpkSK8M-ktwMPSpe7Bqa2TEXc0_k_zZOsUyRRC9L3zPXopDeWcMUksk9YTSqU65nw7g'
+uri = "http://localhost:8000/api/verify-jwt-token"
+resp = requests.post(uri, data={"token":access_token})
+print(resp.status_code)
+200
+
+--post--
+country_data = {
+ "country":"United State of America",
+ "country_code":"+001"
+}
+
+headers = { 'authorization': "Bearer {}".format(access_token) }
+uri = "http://localhost:8000/api/list-country"
+resp = requests.post(uri, data=country_data, headers=headers)
+print(resp.content)
+
+headers = { 'authorization': "Bearer {}".format(access_token) }
+conn = http.client.HTTPConnection("localhost:8000")
+conn.request("GET", "/api/private-scoped", headers=headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+
+
+F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa@clients
+AUTH0_DOMAIN : jtsk.auth0.com
+iss : https://jtsk.auth0.com/
+sub : F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa@clients
+aud : https://mydrfapi.com
+iat : 1520083272
+exp : 1520169672
+azp : F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa
+gty : client-credentials
+[03/Mar/2018 21:41:06] "GET /api/private-scoped HTTP/1.1" 403 53
+F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa@clients
+AUTH0_DOMAIN : jtsk.auth0.com
+iss : https://jtsk.auth0.com/
+sub : F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa@clients
+aud : https://mydrfapi.com
+iat : 1520083272
+exp : 1520169672
+azp : F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa
+gty : client-credentials
+[03/Mar/2018 21:41:08] "GET /api/private-scoped HTTP/1.1" 403 53
+
+
+
+
+
+
+https://jtsk.auth0.com/authorize?audience=https://mydrfapi.com&scope=read:messages&response_type=token&client_id=F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa&redirect_uri=http://127.0.0.1:8000/api/private-scoped&nonce=randkey&state=home
+
+conn = http.client.HTTPSConnection("jtsk.auth0.com")
+payload = "{\"client_id\":\"F7ceIjKnGqhg75VpGtXcHiohuKOEgvDa\",\"scope\":\"read:messages\",\"audience\":\"https://mydrfapi.com\",\"response_type\":\"token\",\"nonce\":\"myrankey\",\"state\":\"local\",\"redirect_uri\":\"http://127.0.0.1:8000/api/private-scoped"}"
+headers = { 'content-type': "application/json" }
+conn.request("GET", "/authorize", payload, headers)
+res = conn.getresponse()
+data = res.read()
+print(data.decode("utf-8"))
+resp = json.loads(data.decode("utf-8"))
+access_token = resp['access_token']
+
+
+https://jtsk.auth0.com/authorize?
+  audience=YOUR_API_AUDIENCE&
+  scope=YOUR_SCOPE&
+  response_type=YOUR_RESPONSE_TYPE&
+  client_id=bdZcSFL2Ri3f2x9EocRcKbKcF9f-fBPb&
+  redirect_uri=https://YOUR_APP/callback&
+  nonce=YOUR_CRYPTOGRAPHIC_NONCE&
+  state=YOUR_OPAQUE_VALUE
+
+from six.moves.urllib import request
+from cryptography.x509 import load_pem_x509_certificate
+
+from cryptography.hazmat.backends import default_backend
+jsonurl = request.urlopen('https://jtsk.auth0.com/.well-known/jwks.json')
+jwks = json.loads(jsonurl.read())
+cert = '-----BEGIN CERTIFICATE-----\n' + jwks['keys'][0]['x5c'][0] + '\n-----END CERTIFICATE-----'
+certificate = load_pem_x509_certificate(cert.encode('utf-8'), default_backend())
+
+
+
+
+
+
+
+
+
